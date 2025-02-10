@@ -68,8 +68,9 @@ type ConnectionState struct {
 	//
 	// Minimum (empty) fields for fortio.org/log http logging and others
 	// to compile and run.
-	PeerCertificates []*x509.Certificate
-	CipherSuite      uint16
+	PeerCertificates   []*x509.Certificate
+	CipherSuite        uint16
+	NegotiatedProtocol string
 }
 
 // ClientAuthType declares the policy the server will follow for
@@ -465,6 +466,55 @@ type ticketKey struct {
 	hmacKey [16]byte
 	// created is the time at which this ticket key was created. See Config.ticketKeys.
 	created time.Time
+}
+
+// Clone returns a shallow clone of c or nil if c is nil. It is safe to clone a Config that is
+// being used concurrently by a TLS client or server.
+func (c *Config) Clone() *Config {
+	if c == nil {
+		return nil
+	}
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return &Config{
+		Rand:                        c.Rand,
+		Time:                        c.Time,
+		Certificates:                c.Certificates,
+		NameToCertificate:           c.NameToCertificate,
+		GetCertificate:              c.GetCertificate,
+		GetClientCertificate:        c.GetClientCertificate,
+		GetConfigForClient:          c.GetConfigForClient,
+		VerifyPeerCertificate:       c.VerifyPeerCertificate,
+		VerifyConnection:            c.VerifyConnection,
+		RootCAs:                     c.RootCAs,
+		NextProtos:                  c.NextProtos,
+		ServerName:                  c.ServerName,
+		ClientAuth:                  c.ClientAuth,
+		ClientCAs:                   c.ClientCAs,
+		InsecureSkipVerify:          c.InsecureSkipVerify,
+		CipherSuites:                c.CipherSuites,
+		PreferServerCipherSuites:    c.PreferServerCipherSuites,
+		SessionTicketsDisabled:      c.SessionTicketsDisabled,
+		SessionTicketKey:            c.SessionTicketKey,
+		ClientSessionCache:          c.ClientSessionCache,
+		UnwrapSession:               c.UnwrapSession,
+		WrapSession:                 c.WrapSession,
+		MinVersion:                  c.MinVersion,
+		MaxVersion:                  c.MaxVersion,
+		CurvePreferences:            c.CurvePreferences,
+		DynamicRecordSizingDisabled: c.DynamicRecordSizingDisabled,
+		Renegotiation:               c.Renegotiation,
+		KeyLogWriter:                c.KeyLogWriter,
+		sessionTicketKeys:           c.sessionTicketKeys,
+		autoSessionTicketKeys:       c.autoSessionTicketKeys,
+	}
+}
+
+var supportedVersions = []uint16{
+	VersionTLS13,
+	VersionTLS12,
+	VersionTLS11,
+	VersionTLS10,
 }
 
 // A Certificate is a chain of one or more certificates, leaf first.

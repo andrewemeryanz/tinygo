@@ -20,11 +20,19 @@ import (
 	"net"
 )
 
+// Server returns a new TLS server side connection
+// using conn as the underlying transport.
+// The configuration config must be non-nil and must include
+// at least one certificate or else set GetCertificate.
+func Server(conn net.Conn, config *Config) *Conn {
+	panic("tls.Server() not implemented")
+}
+
 // Client returns a new TLS client side connection
 // using conn as the underlying transport.
 // The config cannot be nil: users must set either ServerName or
 // InsecureSkipVerify in the config.
-func Client(conn net.Conn, config *Config) *net.TLSConn {
+func Client(conn net.Conn, config *Config) *TLSConn {
 	panic("tls.Client() not implemented")
 	return nil
 }
@@ -56,14 +64,14 @@ func NewListener(inner net.Listener, config *Config) net.Listener {
 //
 // DialWithDialer uses context.Background internally; to specify the context,
 // use Dialer.DialContext with NetDialer set to the desired dialer.
-func DialWithDialer(dialer *net.Dialer, network, addr string, config *Config) (*net.TLSConn, error) {
+func DialWithDialer(dialer *net.Dialer, network, addr string, config *Config) (*TLSConn, error) {
 	switch network {
 	case "tcp", "tcp4":
 	default:
 		return nil, fmt.Errorf("Network %s not supported", network)
 	}
 
-	return net.DialTLS(addr)
+	return DialTLS(addr)
 }
 
 // Dial connects to the given network address using net.Dial
@@ -72,7 +80,7 @@ func DialWithDialer(dialer *net.Dialer, network, addr string, config *Config) (*
 // Dial interprets a nil configuration as equivalent to
 // the zero configuration; see the documentation of Config
 // for the defaults.
-func Dial(network, addr string, config *Config) (*net.TLSConn, error) {
+func Dial(network, addr string, config *Config) (*TLSConn, error) {
 	return DialWithDialer(new(net.Dialer), network, addr, config)
 }
 
@@ -107,7 +115,7 @@ func (d *Dialer) DialContext(ctx context.Context, network, addr string) (net.Con
 		return nil, fmt.Errorf("Network %s not supported", network)
 	}
 
-	return net.DialTLS(addr)
+	return DialTLS(addr)
 }
 
 // LoadX509KeyPair reads and parses a public/private key pair from a pair
